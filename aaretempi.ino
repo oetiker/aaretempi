@@ -1,5 +1,5 @@
 /*******************************************************************************
-   Copyright (c) 2018 by Tobi Oetiker
+   Copyright (c) 2019 by Tobi Oetiker
    https://github.com/oetiker/aaretempi
 
    This code has been tested on an Adafruit Feather 32U4. It reads

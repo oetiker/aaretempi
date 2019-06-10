@@ -47,7 +47,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // This should also be in little endian format (LSB), see above.
-static const u1_t PROGMEM DEVEUI[8] = { FILLTHIS };
+static const u1_t PROGMEM DEVEUI[8] = { 0xD6, 0x30, 0x29, 0xD1, 0x22, 0x65, 0xF2, 0x00 };
 
 void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
@@ -57,7 +57,7 @@ void os_getDevEui (u1_t* buf) {
 // first. When copying an EUI from ttnctl output, this means to reverse
 // the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
 // 0x70.
-static const u1_t PROGMEM APPEUI[8] = { FILLTHIS };
+static const u1_t PROGMEM APPEUI[8] = { 0xFA, 0x3D, 0x01, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
 
 void os_getArtEui (u1_t* buf) {
   memcpy_P(buf, APPEUI, 8);
@@ -68,7 +68,7 @@ void os_getArtEui (u1_t* buf) {
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
 // The key shown here is the semtech default key.
-static const u1_t PROGMEM APPKEY[16] = { FILLTHIS  };
+static const u1_t PROGMEM APPKEY[16] = { 0x21, 0x40, 0xE3, 0x4D, 0x33, 0x2C, 0x29, 0xBF, 0x35, 0x78, 0x74, 0xCF, 0x8D, 0x20, 0x7C, 0x07  };
 
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
@@ -149,7 +149,7 @@ void deepSleep() {
 #else
     int sleep = 0;
     while(true){
-      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  
+      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
       if (sleep > PROBE_INTERVAL) {
         break;
       }
@@ -183,7 +183,10 @@ void checkAndSend(){
     static float t0prev = 0;
     static float t1prev = 0;
     sensors.requestTemperatures();
-    delay(1000);
+    // digitalWrite(LED_BUILTIN, HIGH);
+    // delay(100);
+    // digitalWrite(LED_BUILTIN, LOW);      
+    delay(500);
     float t0 = correctTemperature(0, sensors.getTempCByIndex(0));
     float t1 = correctTemperature(1, sensors.getTempCByIndex(1));
     if (fabs(t0-t0prev) > SEND_DIFF || fabs(t1-t1prev) > SEND_DIFF){
@@ -195,7 +198,7 @@ void checkAndSend(){
     }
 #ifdef SHOW_DEBUG
     else {
-    Serial.println("No Temp Change ...");
+      Serial.println("No Temp Change ...");
     }
 #endif
 }
@@ -256,12 +259,12 @@ int initialRound = 1;
 void loop() {
   if (sendDone){
     if (!initialRound){
-        deepSleep();
+       deepSleep();
     }
     initialRound = 0;
     checkAndSend();
   }
   else {
-     os_runloop_once();
+    os_runloop_once();
   }
 }

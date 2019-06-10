@@ -10,17 +10,13 @@
    application key is configured, which are used in an over-the-air
    activation procedure where a DevAddr and session keys are
    assigned/generated for use with all further communication.
-
-   Note: LoRaWAN per sub-band duty-cycle limitation is enforced (1% in
-   g1, 0.1% in g2), but not the TTN fair usage policy (which is probably
-   violated by this sketch when left running for longer)!
-
+   
    To use this sketch, first register your application and device with
    the things network, to set or generate an AppEUI, DevEUI and AppKey.
    Multiple devices can use the same AppEUI, but each device has its own
    DevEUI and AppKey.
 
-   Do not forget to define the radio type correctly in config.h.
+   This will require 0.5 mA in sleep mode ... so it will use pretty little energy.
 
  *******************************************************************************/
 

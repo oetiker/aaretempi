@@ -1,5 +1,5 @@
 /*******************************************************************************
-   Copyright (c) 2019 by Tobi Oetiker
+   Copyright (c) 2018 by Tobi Oetiker
    https://github.com/oetiker/aaretempi
 
    This code has been tested on an Adafruit Feather 32U4. It reads
@@ -10,18 +10,22 @@
    application key is configured, which are used in an over-the-air
    activation procedure where a DevAddr and session keys are
    assigned/generated for use with all further communication.
-   
+
+   Note: LoRaWAN per sub-band duty-cycle limitation is enforced (1% in
+   g1, 0.1% in g2), but not the TTN fair usage policy (which is probably
+   violated by this sketch when left running for longer)!
+
    To use this sketch, first register your application and device with
    the things network, to set or generate an AppEUI, DevEUI and AppKey.
    Multiple devices can use the same AppEUI, but each device has its own
    DevEUI and AppKey.
 
-   This will require 0.5 mA in sleep mode ... so it will use pretty little energy.
+   Do not forget to define the radio type correctly in config.h.
 
  *******************************************************************************/
 
 
-#define PROBE_INTERVAL 300
+#define PROBE_INTERVAL 1200L
 #define SEND_DIFF 0.2
 #define CFG_eu868 1
 #define CFG_sx1276_radio 1
@@ -43,7 +47,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // This should also be in little endian format (LSB), see above.
-static const u1_t PROGMEM DEVEUI[8] = { 0xD6, 0x30, 0x29, 0xD1, 0x22, 0x65, 0xF2, 0x00 };
+static const u1_t PROGMEM DEVEUI[8] = { 0x8B, 0x06, 0x4F, 0xA0, 0xDA, 0xBB, 0x6A, 0x00 };
 
 void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
@@ -64,7 +68,7 @@ void os_getArtEui (u1_t* buf) {
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
 // The key shown here is the semtech default key.
-static const u1_t PROGMEM APPKEY[16] = { 0x21, 0x40, 0xE3, 0x4D, 0x33, 0x2C, 0x29, 0xBF, 0x35, 0x78, 0x74, 0xCF, 0x8D, 0x20, 0x7C, 0x07  };
+static const u1_t PROGMEM APPKEY[16] = { 0xC0, 0x17, 0xCF, 0xF2, 0xCE, 0x67, 0x13, 0x24, 0xFF, 0xB8, 0x14, 0x76, 0x41, 0xC0, 0xC3, 0x09 };
 
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
@@ -82,6 +86,7 @@ const lmic_pinmap lmic_pins = {
 };
 
 int sendDone = 1;
+int initialRound = 1;
 
 void onEvent (ev_t ev) {
   switch (ev) {
@@ -216,7 +221,13 @@ void do_send(osjob_t* j,float t0,float t1) {
     measuredvbat /= 1024; // convert to voltage
     floatToBuffer(buffer, measuredvbat, 4);
 #ifdef SHOW_DEBUG
-    Serial.print("Sending Data ...");
+    Serial.println("Sending Data ...");
+    Serial.print("t0:");
+    Serial.println(t0);
+    Serial.print("t1:");
+    Serial.println(t1);
+    Serial.print("vbat:");
+    Serial.println(measuredvbat);
 #endif
     LMIC_setTxData2(1, buffer, sizeof(buffer), 0);
    }
@@ -250,15 +261,14 @@ void setup() {
 }
 
 
-int initialRound = 1;
 
 void loop() {
   if (sendDone){
     if (!initialRound){
        deepSleep();
     }
-    initialRound = 0;
     checkAndSend();
+    initialRound = 0;
   }
   else {
     os_runloop_once();

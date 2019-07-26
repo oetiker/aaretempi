@@ -1,5 +1,5 @@
 /*******************************************************************************
-   Copyright (c) 2018 by Tobi Oetiker
+   Copyright (c) 2019 by Tobi Oetiker
    https://github.com/oetiker/aaretempi
 
    This code has been tested on an Adafruit Feather 32U4. It reads
@@ -21,6 +21,23 @@
    DevEUI and AppKey.
 
    Do not forget to define the radio type correctly in config.h.
+
+   function Decoder(bytes, port) {
+     return {
+        celsius1: ((bytes[0] << 8) | bytes[1])/100,
+        celsius2: ((bytes[2] << 8) | bytes[3])/100,
+        volt: ((bytes[4] << 8) | bytes[5])/100,
+    };
+  }
+
+  function Validator(converted, port) {
+    if (converted.celsius1 < -20) return false;
+    if (converted.celsius2 < -20) return false;
+    if (converted.celsius1 > 45) return false;
+    if (converted.celsius2 > 45) return false;
+    if (converted.volt > 5) return false;
+    return true;
+  }
 
  *******************************************************************************/
 
